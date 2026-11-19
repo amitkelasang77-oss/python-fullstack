@@ -125,6 +125,32 @@
 
 <body>
 
+    
+<div style="
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    padding: 18px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+">
+
+    <h3>Welcome, {{ request.user.username }}! 👋</h3>
+
+    <a href="{% url 'logout' %}"
+       style="
+       color: white;
+       text-decoration: none;
+       background: #ffffff30;
+       padding: 10px 18px;
+       border-radius: 8px;
+       ">
+       Logout
+    </a>
+
+</div>
+
+
     <div class="container">
 
         <div class="header">

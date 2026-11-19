@@ -1,48 +1,149 @@
-from django.shortcuts import render
-from django.http import HttpResponse
-# Create your views here.
+
+from django.shortcuts import render, redirect
+from django.contrib.auth import authenticate, login, logout
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.forms import UserCreationForm
+
+from .models import student_table
+from .forms import StudentForm
+
+
+# HOME PAGE
 def home(request):
-    data={
-          'name':"xyz",
-          'age':18,
-         'department':"bca"
+    data = {
+        'name': "xyz",
+        'age': 18,
+        'department': "bca"
     }
-    marks=[100,96,97]
-    return render(request,'home.html',{'data':data,'marks':marks})
+
+    marks = [100, 96, 97]
+
+    return render(request, 'home.html', {
+        'data': data,
+        'marks': marks
+    })
+
+
+# ABOUT PAGE
 def about(request):
-        return render(request, 'about.html')
+    return render(request, 'about.html')
+
+
+# CONTACT PAGE
 def contact(request):
-       return render(request,'contact.html')   
-def form(request):
-      return render(request,' student_from.html')
+    return render(request, 'contact.html')
 
 
-from django.shortcuts import render
-
+# STUDENT REGISTRATION FORM
+@login_required(login_url='login')
 def student_form(request):
+
+    student = student_table.objects.filter(
+        user=request.user
+    ).first()
 
     if request.method == "POST":
 
-        reg_no = request.POST.get('reg_no')
-        name = request.POST.get('name')
-        email = request.POST.get('email')
-        marks = request.POST.get('marks')
-        dob = request.POST.get('dob')
+        form = StudentForm(
+            request.POST,
+            instance=student
+        )
 
-        student = {
-            'reg_no': reg_no,
-            'name': name,
-            'email': email,
-            'marks': marks,
-            'dob': dob
-        }
+        if form.is_valid():
 
-        return render(request, 'student_form.html', {
-            'student': student
-        })
+            student = form.save(commit=False)
+            student.user = request.user
+            student.save()
 
-    return render(request, 'student_form.html')
+            messages.success(
+                request,
+                "Student details saved successfully!"
+            )
+
+            return redirect('dashboard')
+
+    else:
+        form = StudentForm(instance=student)
+
+    return render(request, 'student_form.html', {
+        'form': form,
+        'student': student
+    })
 
 
+# LOGIN PAGE
+def user_login(request):
+
+    if request.method == "POST":
+
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+
+        user = authenticate(
+            request,
+            username=username,
+            password=password
+        )
+
+        if user is not None:
+
+            login(request, user)
+
+            return redirect('dashboard')
+
+        else:
+            messages.error(
+                request,
+                "Invalid username or password"
+            )
+
+    return render(request, 'login_page.html')
 
 
+# LOGOUT PAGE
+@login_required(login_url='login')
+def user_logout(request):
+
+    logout(request)
+
+    return redirect('login')
+
+
+# USER REGISTRATION
+def register(request):
+
+    if request.method == "POST":
+
+        form = UserCreationForm(request.POST)
+
+        if form.is_valid():
+
+            form.save()
+
+            messages.success(
+                request,
+                "Account created successfully! Please login."
+            )
+
+            return redirect('login')
+
+    else:
+        form = UserCreationForm()
+
+    return render(request, 'register.html', {
+        'form': form
+    })
+
+
+# STUDENT DASHBOARD
+@login_required(login_url='login')
+def dashboard(request):
+
+    student = student_table.objects.filter(
+        user=request.user
+    ).first()
+
+    return render(request, 'dashboard.html', {
+        'student': student
+    })
