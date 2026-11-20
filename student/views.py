@@ -5,9 +5,11 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 
-from .models import student_table
+from .models import Student_table
 from .forms import StudentForm
-
+from .serializers import StudentSerializer
+from rest_framework.decorators import api_view
+from rest_framework.response import Response 
 
 # HOME PAGE
 def home(request):
@@ -39,7 +41,7 @@ def contact(request):
 @login_required(login_url='login')
 def student_form(request):
 
-    student = student_table.objects.filter(
+    student = Student_table.objects.filter(
         user=request.user
     ).first()
 
@@ -140,10 +142,27 @@ def register(request):
 @login_required(login_url='login')
 def dashboard(request):
 
-    student = student_table.objects.filter(
+    student = Student_table.objects.filter(
         user=request.user
     ).first()
 
     return render(request, 'dashboard.html', {
         'student': student
     })
+
+@api_view(['GET', 'POST'])
+def student_api(request):
+
+    if request.method == 'GET':
+        students = Student_table.objects.all()
+        serializer = StudentSerializer(students, many=True)
+        return Response(serializer.data,status=200)
+
+    if request.method == 'POST':
+        serializer = StudentSerializer(data=request.data)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=201)
+
+        return Response(serializer.errors, status=400)

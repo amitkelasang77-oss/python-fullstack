@@ -1,12 +1,12 @@
 
 from django import forms
-from .models import student_table
+from .models import Student_table
 
 
 class StudentForm(forms.ModelForm):
 
     class Meta:
-        model = student_table
+        model = Student_table
 
         fields = [
             'reg_no',

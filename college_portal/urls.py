@@ -45,4 +45,6 @@ urlpatterns = [
     # Student Dashboard
     path('dashboard/', views.dashboard, name='dashboard'),
 
+    path('api/',views.student_api,name='student_api')
+
 ]
